@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Tauri v2 Desktop Application Wrapper**: IF-Creator can now run as a native desktop app in addition to the existing browser-hosted server mode. The desktop shell (`src-tauri/`) spawns the same server binary as a background "sidecar" process, waits for it to become healthy, and opens a native window pointed at it — no server/UI logic is duplicated between the two modes. Sidecar binaries can be staged for Linux, Windows, and macOS via new `deno task compile:sidecar:*` tasks; `deno task tauri:dev` / `deno task tauri:build` run and package the desktop shell.
+- **`--host` CLI Flag**: The browser-server mode can now be explicitly bound to a non-loopback address (e.g. `--host 0.0.0.0`) for remote/LAN access, in addition to its default `127.0.0.1`-only binding.
+
+### Fixed
+- **Client-Side Script Failing to Parse Entirely**: The single-page app's inline `<script>` (`src/ui/app_html.ts`) is generated from a TypeScript template literal; several embedded `\n`/`\"` escape sequences were single-escaped instead of double-escaped, so the outer template literal collapsed them into raw newlines/quotes before they reached the browser. This broke a regex literal and a string literal, causing a syntax error that prevented *any* client-side JavaScript from running (no tab switching, editors, diagnostics, or save/load). Fixed the escaping so the emitted script parses correctly.
+
 ## [1.0.0] - 2026-09-23
 
 ### Fixed

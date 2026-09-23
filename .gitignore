@@ -343,3 +343,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+### IF-Creator Tauri desktop wrapper
+# Staged sidecar binaries are build output (produced by `deno task compile:sidecar:*`)
+src-tauri/binaries/*
+!src-tauri/binaries/.gitkeep
+# Tauri-generated schema/binding files
+src-tauri/gen/
+

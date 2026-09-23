@@ -904,7 +904,7 @@ export const APP_HTML = `<!DOCTYPE html>
 
     function populateExamplesFromCombined(code) {
       if (!code) return;
-      const sections = code.split(/\n-{40,}\n/);
+      const sections = code.split(/\\n-{40,}\\n/);
       if (sections.length >= 6) {
         let first = sections[0].trim();
         const headerEnd = first.indexOf('/* -------------------------------------------------------------------------- */');
@@ -947,18 +947,18 @@ export const APP_HTML = `<!DOCTYPE html>
       sections.push("// ============================================================================");
       sections.push("");
       sections.push(c);
-      sections.push("\n--------------------------------------------------------------------------------\n");
+      sections.push("\\n--------------------------------------------------------------------------------\\n");
       sections.push(cpp);
-      sections.push("\n--------------------------------------------------------------------------------\n");
+      sections.push("\\n--------------------------------------------------------------------------------\\n");
       sections.push(ts);
-      sections.push("\n--------------------------------------------------------------------------------\n");
+      sections.push("\\n--------------------------------------------------------------------------------\\n");
       sections.push(claude);
-      sections.push("\n--------------------------------------------------------------------------------\n");
+      sections.push("\\n--------------------------------------------------------------------------------\\n");
       sections.push(pi);
-      sections.push("\n--------------------------------------------------------------------------------\n");
+      sections.push("\\n--------------------------------------------------------------------------------\\n");
       sections.push(nous_hermes);
 
-      currentProject.tiers.tier5_examples.code = sections.join("\n");
+      currentProject.tiers.tier5_examples.code = sections.join("\\n");
     }
 
     function copyAllExamples() {
@@ -1023,7 +1023,7 @@ export const APP_HTML = `<!DOCTYPE html>
     const SAMPLE_TEMPLATES = {
       c: "// Low-level C interface definition\\n#include <stdint.h>\\n\\n/**\\n * Initializes the device engine.\\n */\\nint engine_init(const char* device_name, int mode);\\n\\n/**\\n * Executes computation on input buffer.\\n */\\nint engine_compute(const double* input, int count, double* output);\\n\\n/**\\n * Retrieves engine status.\\n */\\nint engine_get_status(void);\\n\\n/**\\n * Shuts down the engine safely.\\n */\\nvoid engine_shutdown(void);\\n",
       cpp: "// Low-level C++ class and interface definition\\n#include <string>\\n#include <vector>\\n\\nclass EngineController {\\npublic:\\n    /**\\n     * Initializes engine with configuration parameters.\\n     */\\n    bool initialize(const std::string& config_file, int mode);\\n\\n    /**\\n     * Processes input data vector.\\n     */\\n    std::vector<double> processData(const std::vector<double>& input);\\n\\n    /**\\n     * Retrieves current operating state code.\\n     */\\n    int getStatusCode() const;\\n\\n    /**\\n     * Shuts down engine subsystem.\\n     */\\n    void shutdown();\\n};\\n",
-      python3: "# Low-level Python 3 typed interface definition\\nfrom typing import List, Optional, Dict\\n\\ndef initialize_engine(device_name: str, mode: int = 1) -> bool:\\n    \"\"\"Initializes the device engine.\"\"\"\\n    pass\\n\\ndef process_batch(input_data: List[float], timeout_ms: int = 5000) -> List[float]:\\n    \"\"\"Executes computation on input batch data.\"\"\"\\n    pass\\n\\ndef get_engine_status() -> int:\\n    \"\"\"Retrieves current engine status code.\"\"\"\\n    pass\\n\\ndef shutdown_engine() -> None:\\n    \"\"\"Safely shuts down the engine.\"\"\"\\n    pass\\n"
+      python3: "# Low-level Python 3 typed interface definition\\nfrom typing import List, Optional, Dict\\n\\ndef initialize_engine(device_name: str, mode: int = 1) -> bool:\\n    \\"\\"\\"Initializes the device engine.\\"\\"\\"\\n    pass\\n\\ndef process_batch(input_data: List[float], timeout_ms: int = 5000) -> List[float]:\\n    \\"\\"\\"Executes computation on input batch data.\\"\\"\\"\\n    pass\\n\\ndef get_engine_status() -> int:\\n    \\"\\"\\"Retrieves current engine status code.\\"\\"\\"\\n    pass\\n\\ndef shutdown_engine() -> None:\\n    \\"\\"\\"Safely shuts down the engine.\\"\\"\\"\\n    pass\\n"
     };
 
     function onFormInput(langChanged) {

@@ -21,12 +21,28 @@ export async function openBrowser(url: string) {
   }
 }
 
+export interface ServeOptions {
+  port: number;
+  host: string;
+  open: boolean;
+}
+
+export function resolveServeOptions(
+  flags: { port?: string; host?: string; "no-open"?: boolean },
+): ServeOptions {
+  const port = parseInt(flags.port ?? "3000", 10) || 3000;
+  const host = flags.host || "127.0.0.1";
+  const open = !flags["no-open"];
+  return { port, host, open };
+}
+
 export async function main() {
   const flags = parseArgs(Deno.args, {
-    string: ["port", "input", "output", "lang", "name"],
+    string: ["port", "host", "input", "output", "lang", "name"],
     boolean: ["help", "version", "no-open", "cli"],
     default: {
       port: "3000",
+      host: "127.0.0.1",
       "no-open": false,
     },
     alias: {
@@ -48,6 +64,11 @@ Usage:
 
 Options:
   -p, --port <port>       Port to run the visual harness web server (default: 3000)
+  --host <address>        Address to bind the server to (default: 127.0.0.1).
+                          Use 0.0.0.0 to allow remote/LAN access. WARNING: this
+                          exposes the unauthenticated filesystem browse and
+                          project save/load API endpoints to the network —
+                          only do this on a trusted network.
   --no-open               Do not automatically launch web browser/viewer
   -i, --input <file>      Input low-level API definition file (CLI batch mode)
   -o, --output <dir>      Output directory for generated multi-tier interfaces
@@ -109,9 +130,9 @@ Options:
   }
 
   // Visual Harness Web Server Mode
-  const port = parseInt(flags.port, 10) || 3000;
+  const { port, host, open } = resolveServeOptions(flags);
   const app = new ServerApp();
-  const url = `http://localhost:${port}`;
+  const url = `http://${host === "0.0.0.0" ? "localhost" : host}:${port}`;
 
   console.log(`
 ┌─────────────────────────────────────────────────────────────┐
@@ -123,11 +144,11 @@ Options:
 └─────────────────────────────────────────────────────────────┘
 `);
 
-  if (!flags["no-open"]) {
+  if (open) {
     openBrowser(url);
   }
 
-  app.listen(port);
+  app.listen(port, host);
 }
 
 if (import.meta.main) {

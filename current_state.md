@@ -41,6 +41,14 @@ IF-Creator/
 ├── dist/
 │   └── debian/
 │       └── if-creator           # Standalone compiled Deno executable binary
+├── src-tauri/                    # Tauri v2 native desktop shell (sidecar wrapper)
+│   ├── src/main.rs               # Spawns the server sidecar, opens the native window
+│   ├── tauri.conf.json           # App identifier, icons, bundle targets, sidecar config
+│   ├── capabilities/default.json # Tauri v2 permission grant (sidecar execute only)
+│   ├── icons/                    # Generated desktop icon set
+│   └── binaries/                 # Staged per-platform sidecar binaries (build output)
+├── assets/
+│   └── icon-source.png          # Placeholder source image for the desktop app icon
 ├── docs/                        # Sphinx documentation suite
 │   ├── Makefile
 │   ├── conf.py
@@ -72,7 +80,8 @@ IF-Creator/
     ├── project_test.ts          # Project compiler tests
     ├── generators_test.ts       # Code generation tests for all 5 tiers
     ├── diagnostics_test.ts      # Diagnostic engine tests
-    └── server_test.ts           # Web server endpoint and HTML integration tests
+    ├── server_test.ts           # Web server endpoint and HTML integration tests
+    └── main_test.ts             # CLI serve-option resolution tests (--host/--port/--no-open)
 ```
 
 ---
@@ -83,6 +92,7 @@ IF-Creator/
 - **Node.js** >= 18 (optional, for `package.json` compatibility and npm tools)
 - **Python 3 & Sphinx** (optional, for rebuilding Sphinx documentation in `docs/`)
 - **Git** & **GitHub CLI (`gh`)**
+- **Rust & Cargo, plus the Tauri CLI** (optional, only for building/running the native desktop app — see Step 4.9): `cargo install tauri-cli --version "^2" --locked`. On Linux, also requires `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `librsvg2-dev`, and `patchelf`.
 
 ---
 
@@ -203,10 +213,37 @@ Connects the parser, diagnostics, and all 5 tier generators in an atomic pipelin
 
 ### Step 4.8: CLI Entry Point (`src/main.ts`)
 
-Supports subcommands:
-- `if-creator serve [--port 8080] [--host 127.0.0.1]`: Launches the web GUI server.
-- `if-creator generate -i <input_file> -o <output_dir> [-l <c|cpp|python3>]`: Headless generation of all 5 tiers.
-- `if-creator check -i <input_file>`: Validates syntax and outputs diagnostics.
+- `if-creator [--port 3000] [--host 127.0.0.1] [--no-open]`: Launches the web GUI server (default mode). `--host` defaults to loopback-only; pass `--host 0.0.0.0` to allow remote/LAN access (see the security warning in Step 4.9 / README). Flag resolution is implemented as a pure, unit-tested function `resolveServeOptions()` (`tests/main_test.ts`).
+- `if-creator --input <file> --output <dir> [--lang <c|cpp|python3>] [--name <name>]`: Headless batch generation of all 5 tiers to disk.
+- `if-creator --help` / `--version`: Standard CLI info flags.
+
+---
+
+### Step 4.9: Desktop App (Tauri) Wrapper (`src-tauri/`)
+
+IF-Creator can run either as the browser-hosted server above, or as a native desktop app, without any duplicated business logic — both modes serve the exact same `src/server/app.ts` + `src/ui/app_html.ts`.
+
+The desktop app is a thin Tauri v2 Rust crate under `src-tauri/` that:
+1. Picks a free local TCP port.
+2. Spawns the compiled `if-creator` server binary as a **sidecar** child process (`--port <n> --host 127.0.0.1 --no-open`).
+3. Polls `GET /api/health` until the sidecar responds (or times out).
+4. Opens a native `WebviewWindow` pointed at `http://127.0.0.1:<n>`.
+5. Kills the sidecar child process when the app exits.
+
+Key files:
+- `src-tauri/src/main.rs` — the sidecar-spawn/health-check/window-creation/cleanup logic described above.
+- `src-tauri/tauri.conf.json` — app identifier (`com.wwrinc.if-creator`), icon set, and `bundle.externalBin: ["binaries/if-creator"]` (Tauri resolves the correct per-platform binary by appending the Rust target triple at both build and run time).
+- `src-tauri/capabilities/default.json` — Tauri v2 capability scoping the shell plugin's execute permission to only the `if-creator` sidecar.
+- `src-tauri/binaries/` — staged, per-platform sidecar binaries (build output, gitignored). Populate via `deno task compile:sidecar:linux-x64` / `:windows-x64` / `:macos-x64` / `:macos-arm64` / `:all`.
+- `assets/icon-source.png` — the placeholder source icon; regenerate the full icon set with `cargo tauri icon assets/icon-source.png` if it's replaced with real branding.
+
+Run/build:
+```bash
+deno task compile:sidecar:linux-x64   # stage the sidecar binary for your platform
+deno task tauri:dev                   # dev-mode desktop app
+deno task tauri:build                 # produces .deb / AppImage under src-tauri/target/release/bundle/
+```
+Only the Linux desktop shell can be built/run without a native Windows or macOS machine — the Deno sidecar binaries themselves cross-compile fine from Linux, but the Tauri shell (`cargo tauri build`) needs each OS's own toolchain (MSVC/WebView2, or Xcode/WKWebView).
 
 ---
 
@@ -216,17 +253,20 @@ Run the automated test suite with:
 ```bash
 deno test --allow-read --allow-write --allow-net --allow-env
 ```
-All 15 test suites verify:
+All 20 tests across 6 suites verify:
 - Parser correctness for C, C++, and Python.
 - Diagnostics generation.
 - Correct code generation across Tier 1 through Tier 5.
 - Web server endpoints, HTML generation, and dynamic API file imports.
+- CLI serve-option resolution (`--host`/`--port`/`--no-open`, `tests/main_test.ts`).
 
 To compile the standalone Debian/Linux binary:
 ```bash
 deno task compile
 ```
 Output is created in `dist/debian/if-creator`.
+
+The Tauri desktop app (Step 4.9) is verified manually rather than via `deno test`, since it drives a native window: `deno task tauri:dev` for a dev-mode smoke test, `deno task tauri:build` to produce and run a packaged `.deb`/AppImage.
 
 ---
 

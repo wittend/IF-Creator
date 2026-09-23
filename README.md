@@ -27,6 +27,7 @@
 - **Multi-Language Parser**: Ingests C prototypes (`.h`), modern C++ classes (`.hpp`), and Python 3 typed signatures (`.py`).
 - **One-Click Export**: Export all generated code tiers directly to disk.
 - **Standalone Binary**: Precompiled standalone executable for Debian / Linux environments (`dist/debian/if-creator`).
+- **Two ways to run it**: as a native desktop app (Tauri) or as a browser-hosted server you can point at from any machine on your network.
 
 ---
 
@@ -44,6 +45,34 @@ Or run the compiled binary:
 ```
 
 Open `http://localhost:3000` in your browser.
+
+By default the server only listens on `127.0.0.1`. To make it reachable from other machines on your network, bind it explicitly:
+```bash
+deno task start -- --host 0.0.0.0 --port 3000
+```
+**Warning:** the `/api/fs/*` (filesystem browse) and project save/load endpoints have no authentication, and CORS is wide open. Only bind to `0.0.0.0` on a trusted network.
+
+### 1b. Run as a Native Desktop App (Tauri)
+
+IF-Creator can also run as a native desktop window instead of a browser tab. Under the hood, the desktop app spawns the exact same server binary as a background ("sidecar") process on localhost and opens a native window pointed at it — closing the window stops the sidecar too.
+
+Development mode (requires [Rust](https://rustup.rs/) and the Tauri CLI — see [Desktop App Prerequisites](#desktop-app-prerequisites) below):
+```bash
+deno task tauri:dev
+```
+
+Build an installable desktop package (`.deb` / AppImage on Linux):
+```bash
+deno task tauri:build
+```
+Output lands in `src-tauri/target/release/bundle/`.
+
+#### Desktop App Prerequisites
+
+- [Rust & Cargo](https://rustup.rs/)
+- Tauri CLI: `cargo install tauri-cli --version "^2" --locked`
+- Linux: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `librsvg2-dev`, `patchelf` (via your distro's package manager)
+- The sidecar binaries the desktop app launches must be staged first: `deno task compile:sidecar:linux-x64` (or `compile:sidecar:all` for Linux/Windows/macOS). Only the Linux desktop shell can actually be built and run on Linux — Windows/macOS builds need their own native toolchain (MSVC/WebView2, or Xcode/WKWebView) and must be built on those platforms.
 
 ### 2. Command-Line Batch Compilation
 
@@ -98,6 +127,12 @@ IF-Creator/
 │   └── main.ts               # CLI and application entrypoint
 ├── tests/                    # Automated test suites
 ├── dist/debian/              # Debian binary deployment
+├── src-tauri/                # Tauri v2 native desktop shell (sidecar wrapper)
+│   ├── src/main.rs           # Spawns the server sidecar, opens the native window
+│   ├── tauri.conf.json       # Desktop app config (icons, bundle targets, sidecar)
+│   ├── capabilities/         # Tauri v2 permission grants (sidecar execute)
+│   └── binaries/             # Staged per-platform sidecar binaries (build output)
+├── assets/                   # Source assets (e.g. icon-source.png for the desktop app)
 ├── docs/                     # Sphinx Furo documentation
 ├── requirements.md           # Project requirements specification
 ├── CHANGELOG.md              # Version changelog

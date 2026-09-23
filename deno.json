@@ -8,7 +8,14 @@
     "start": "deno run --allow-net --allow-read --allow-write --allow-env --allow-run src/main.ts",
     "test": "deno test --allow-read --allow-write --allow-net --allow-env",
     "compile": "deno compile --allow-net --allow-read --allow-write --allow-env --allow-run --output dist/debian/if-creator src/main.ts",
-    "docs": "sphinx-build -b html docs docs/_build/html"
+    "docs": "sphinx-build -b html docs docs/_build/html",
+    "compile:sidecar:linux-x64": "deno compile --allow-net --allow-read --allow-write --allow-env --allow-run --target x86_64-unknown-linux-gnu --output src-tauri/binaries/if-creator-x86_64-unknown-linux-gnu src/main.ts",
+    "compile:sidecar:windows-x64": "deno compile --allow-net --allow-read --allow-write --allow-env --allow-run --target x86_64-pc-windows-msvc --output src-tauri/binaries/if-creator-x86_64-pc-windows-msvc.exe src/main.ts",
+    "compile:sidecar:macos-x64": "deno compile --allow-net --allow-read --allow-write --allow-env --allow-run --target x86_64-apple-darwin --output src-tauri/binaries/if-creator-x86_64-apple-darwin src/main.ts",
+    "compile:sidecar:macos-arm64": "deno compile --allow-net --allow-read --allow-write --allow-env --allow-run --target aarch64-apple-darwin --output src-tauri/binaries/if-creator-aarch64-apple-darwin src/main.ts",
+    "compile:sidecar:all": "deno task compile:sidecar:linux-x64 && deno task compile:sidecar:windows-x64 && deno task compile:sidecar:macos-x64 && deno task compile:sidecar:macos-arm64",
+    "tauri:dev": "cd src-tauri && cargo tauri dev",
+    "tauri:build": "cd src-tauri && cargo tauri build"
   },
   "compilerOptions": {
     "lib": ["deno.window", "dom"]
