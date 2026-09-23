@@ -1,0 +1,14 @@
+{
+  "name": "if-creator",
+  "version": "1.0.0",
+  "description": "Visual harness for exploring and generating multi-tier interfaces from C, C++, and Python3 APIs",
+  "main": "src/main.ts",
+  "scripts": {
+    "start": "deno run --allow-net --allow-read --allow-write --allow-env --allow-run src/main.ts",
+    "test": "deno test --allow-read --allow-write --allow-net --allow-env",
+    "compile": "deno compile --allow-net --allow-read --allow-write --allow-env --allow-run --output dist/debian/if-creator src/main.ts",
+    "docs": "sphinx-build -b html docs docs/_build/html"
+  },
+  "author": "Dave",
+  "license": "MIT"
+}
